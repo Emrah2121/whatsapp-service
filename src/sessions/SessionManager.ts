@@ -414,6 +414,27 @@ export class SessionManager {
     await state.socket.sendMessage(jid, { text: body });
   }
 
+  /**
+   * Sends an image through the company's active socket, fetched directly by
+   * Baileys from `imageUrl` (must be a publicly reachable HTTPS URL - Laravel
+   * never uploads the bytes here). Throws under the same conditions as
+   * sendMessage().
+   */
+  async sendImage(companyId: number, to: string, imageUrl: string, caption?: string): Promise<void> {
+    const state = this.sessions.get(companyId);
+
+    if (!state?.socket || state.status !== 'connected') {
+      throw new Error(`No active WhatsApp connection for company ${companyId}`);
+    }
+
+    const jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+
+    await state.socket.sendMessage(jid, {
+      image: { url: imageUrl },
+      caption,
+    });
+  }
+
   /** Node's local in-memory view - debugging/ops only, never the UI's source of truth. */
   getStatus(companyId: number): LocalSessionStatus {
     const state = this.sessions.get(companyId);
