@@ -61,5 +61,27 @@ export function createSessionsRouter(sessionManager: SessionManager): Router {
     }
   });
 
+  router.post('/:companyId/send-image', async (req, res) => {
+    const { to, image_url: imageUrl, caption } = req.body ?? {};
+
+    if (typeof to !== 'string' || typeof imageUrl !== 'string' || !to || !imageUrl) {
+      res.status(400).json({ success: false, message: 'to and image_url are required.', data: null, errors: null });
+
+      return;
+    }
+
+    try {
+      await sessionManager.sendImage(req.companyId!, to, imageUrl, typeof caption === 'string' ? caption : undefined);
+      res.status(200).json({ success: true, message: 'Sent.', data: null, errors: null });
+    } catch (error) {
+      res.status(409).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to send image.',
+        data: null,
+        errors: null,
+      });
+    }
+  });
+
   return router;
 }
